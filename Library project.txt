@@ -1,0 +1,255 @@
+package com.library.management;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.util.ArrayList;
+
+public class LibraryManagementSystemGUI {
+    
+    // Book class to define properties of a book
+    static class Book {
+        private String title;
+        private String author;
+        private String ISBN;
+        private boolean isAvailable;
+
+        public Book(String title, String author, String ISBN, boolean isAvailable) {
+            this.title = title;
+            this.author = author;
+            this.ISBN = ISBN;
+            this.isAvailable = isAvailable;
+        }
+
+        public String getTitle() {
+            return title;
+        }
+
+        public void setTitle(String title) {
+            this.title = title;
+        }
+
+        public String getAuthor() {
+            return author;
+        }
+
+        public void setAuthor(String author) {
+            this.author = author;
+        }
+
+        public String getISBN() {
+            return ISBN;
+        }
+
+        public void setISBN(String ISBN) {
+            this.ISBN = ISBN;
+        }
+
+        public boolean isAvailable() {
+            return isAvailable;
+        }
+
+        public void setAvailable(boolean available) {
+            isAvailable = available;
+        }
+
+        @Override
+        public String toString() {
+            return "Title: " + title + ", Author: " + author + ", ISBN: " + ISBN + ", Available: " + (isAvailable ? "Yes" : "No");
+        }
+    }
+
+    // Library class to manage the collection of books
+    static class Library {
+        private final ArrayList<Book> books = new ArrayList<>();
+
+        public void addBook(Book book) {
+            books.add(book);
+        }
+
+        public boolean updateBook(String ISBN, String title, String author, boolean isAvailable) {
+            for (Book book : books) {
+                if (book.getISBN().equals(ISBN)) {
+                    book.setTitle(title);
+                    book.setAuthor(author);
+                    book.setAvailable(isAvailable);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public boolean deleteBook(String ISBN) {
+            return books.removeIf(book -> book.getISBN().equals(ISBN));
+        }
+
+        public ArrayList<Book> searchByTitle(String title) {
+            ArrayList<Book> results = new ArrayList<>();
+            for (Book book : books) {
+                if (book.getTitle().equalsIgnoreCase(title)) {
+                    results.add(book);
+                }
+            }
+            return results;
+        }
+
+        public ArrayList<Book> searchByAuthor(String author) {
+            ArrayList<Book> results = new ArrayList<>();
+            for (Book book : books) {
+                if (book.getAuthor().equalsIgnoreCase(author)) {
+                    results.add(book);
+                }
+            }
+            return results;
+        }
+
+        public ArrayList<Book> getBooks() {
+            return books;
+        }
+    }
+
+    // GUI Class to create and handle the User Interface
+    private final Library library = new Library();
+    private final JFrame frame = new JFrame("Library Management System");
+
+    public LibraryManagementSystemGUI() {
+        frame.setSize(600, 400);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLayout(new BorderLayout());
+
+        JPanel menuPanel = new JPanel();
+        menuPanel.setLayout(new GridLayout(7, 1, 5, 5));
+
+        JButton addBookButton = new JButton("Add Book");
+        JButton updateBookButton = new JButton("Update Book");
+        JButton deleteBookButton = new JButton("Delete Book");
+        JButton searchByTitleButton = new JButton("Search by Title");
+        JButton searchByAuthorButton = new JButton("Search by Author");
+        JButton displayBooksButton = new JButton("Display All Books");
+        JButton exitButton = new JButton("Exit");
+
+        menuPanel.add(addBookButton);
+        menuPanel.add(updateBookButton);
+        menuPanel.add(deleteBookButton);
+        menuPanel.add(searchByTitleButton);
+        menuPanel.add(searchByAuthorButton);
+        menuPanel.add(displayBooksButton);
+        menuPanel.add(exitButton);
+
+        frame.add(menuPanel, BorderLayout.WEST);
+
+        JTextArea displayArea = new JTextArea();
+        displayArea.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(displayArea);
+        frame.add(scrollPane, BorderLayout.CENTER);
+
+        addBookButton.addActionListener(e -> showAddBookDialog(displayArea));
+        updateBookButton.addActionListener(e -> showUpdateBookDialog(displayArea));
+        deleteBookButton.addActionListener(e -> showDeleteBookDialog(displayArea));
+        searchByTitleButton.addActionListener(e -> showSearchByTitleDialog(displayArea));
+        searchByAuthorButton.addActionListener(e -> showSearchByAuthorDialog(displayArea));
+        displayBooksButton.addActionListener(e -> displayBooks(displayArea));
+        exitButton.addActionListener((ActionEvent e) -> frame.dispose());
+
+        frame.setVisible(true);
+    }
+
+    private void showAddBookDialog(JTextArea displayArea) {
+        JTextField titleField = new JTextField();
+        JTextField authorField = new JTextField();
+        JTextField isbnField = new JTextField();
+        JCheckBox availabilityCheckBox = new JCheckBox("Available");
+
+        Object[] fields = {
+                "Title:", titleField,
+                "Author:", authorField,
+                "ISBN:", isbnField,
+                "Availability:", availabilityCheckBox
+        };
+
+        int result = JOptionPane.showConfirmDialog(frame, fields, "Add Book", JOptionPane.OK_CANCEL_OPTION);
+        if (result == JOptionPane.OK_OPTION) {
+            String title = titleField.getText();
+            String author = authorField.getText();
+            String isbn = isbnField.getText();
+            boolean isAvailable = availabilityCheckBox.isSelected();
+            library.addBook(new Book(title, author, isbn, isAvailable));
+            displayArea.append("Book added: " + title + "\n");
+        }
+    }
+
+    private void showUpdateBookDialog(JTextArea displayArea) {
+        String isbn = JOptionPane.showInputDialog(frame, "Enter ISBN of the book to update:");
+        if (isbn != null) {
+            JTextField titleField = new JTextField();
+            JTextField authorField = new JTextField();
+            JCheckBox availabilityCheckBox = new JCheckBox("Available");
+
+            Object[] fields = {
+                    "New Title:", titleField,
+                    "New Author:", authorField,
+                    "Availability:", availabilityCheckBox
+            };
+
+            int result = JOptionPane.showConfirmDialog(frame, fields, "Update Book", JOptionPane.OK_CANCEL_OPTION);
+            if (result == JOptionPane.OK_OPTION) {
+                String title = titleField.getText();
+                String author = authorField.getText();
+                boolean isAvailable = availabilityCheckBox.isSelected();
+                if (library.updateBook(isbn, title, author, isAvailable)) {
+                    displayArea.append("Book updated: " + title + "\n");
+                } else {
+                    displayArea.append("Book with ISBN " + isbn + " not found.\n");
+                }
+            }
+        }
+    }
+
+    private void showDeleteBookDialog(JTextArea displayArea) {
+        String isbn = JOptionPane.showInputDialog(frame, "Enter ISBN of the book to delete:");
+        if (isbn != null) {
+            if (library.deleteBook(isbn)) {
+                displayArea.append("Book with ISBN " + isbn + " deleted.\n");
+            } else {
+                displayArea.append("Book with ISBN " + isbn + " not found.\n");
+            }
+        }
+    }
+
+    private void showSearchByTitleDialog(JTextArea displayArea) {
+        String title = JOptionPane.showInputDialog(frame, "Enter book title to search:");
+        if (title != null) {
+            ArrayList<Book> results = library.searchByTitle(title);
+            displayResults(displayArea, results, "Books matching title: " + title);
+        }
+    }
+
+    private void showSearchByAuthorDialog(JTextArea displayArea) {
+        String author = JOptionPane.showInputDialog(frame, "Enter book author to search:");
+        if (author != null) {
+            ArrayList<Book> results = library.searchByAuthor(author);
+            displayResults(displayArea, results, "Books matching author: " + author);
+        }
+    }
+
+    private void displayBooks(JTextArea displayArea) {
+        ArrayList<Book> books = library.getBooks();
+        displayResults(displayArea, books, "All Books:");
+    }
+
+    private void displayResults(JTextArea displayArea, ArrayList<Book> results, String header) {
+        displayArea.append(header + "\n");
+        if (results.isEmpty()) {
+            displayArea.append("No results found.\n");
+        } else {
+            for (Book book : results) {
+                displayArea.append(book + "\n");
+            }
+        }
+        displayArea.append("\n");
+    }
+
+    public static void main(String[] args) {
+        new LibraryManagementSystemGUI();
+    }
+}
